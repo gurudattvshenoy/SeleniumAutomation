@@ -1,9 +1,11 @@
 package com.qaautomationgurudatt.lib;
 
+import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
@@ -12,34 +14,35 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 
 public class UiGenericUtils 
 {
-	    public WebDriver webDriver;
-	    private WebDriverWait wait;
+	    public static WebDriver _webDriver;
+	    private static WebDriverWait _wait;
 	    
 	    UiGenericUtils(WebDriver driver ,long timeOut)
 	    {
-	        webDriver = driver;
-	        _wait = new WebDriverWait(webDriver, timeOut);
+	        _webDriver = driver;
+	        _wait = new WebDriverWait(_webDriver, timeOut);
 	    }
 	    
 	    public WebDriver getWebDriver() 
 	    {
-	    	return webDriver;
+	    	return _webDriver;
 	    }
 	    
 	    public void implicitlyWait() 
 	    {
-	    	webDriver.manage().timeouts().implicitlyWait(UiConstants.IMPLICIT_TIMEOUT, TimeUnit.SECONDS);
+	    	_webDriver.manage().timeouts().implicitlyWait(UiConstants.IMPLICIT_TIMEOUT,
+	    			TimeUnit.SECONDS);
 
 	    }
 	    
 	    public void waitUntilElementToBeClickable(By by) 
 	    {
-		     wait.until(ExpectedConditions.elementToBeClickable(by));   
+		     _wait.until(ExpectedConditions.elementToBeClickable(by));   
 		}
 	    
 	    public void goToUrl(String url) 
 	    {
-	    	webDriver.get(url);
+	    	_webDriver.get(url);
 	    }
 	    
 	    public void click(By by)
@@ -55,7 +58,7 @@ public class UiGenericUtils
 	    
 	    public WebElement getElementBy(By by) 
 	    {
-			return webDriver.findElement(by);
+			return _webDriver.findElement(by);
 	    }
 	    
 	    public void sendKeys(By by, String text) 
@@ -66,17 +69,17 @@ public class UiGenericUtils
 	    
 	    public String getTitle()
 	    {
-	       return webDriver.getTitle();
+	       return _webDriver.getTitle();
 	    }
 	    
 	    public void deleteAllCookies()
 	    {
-	        webDriver.manage().deleteAllCookies();
+	        _webDriver.manage().deleteAllCookies();
 	    }
 	    
 	    public void maximize() 
 	    {
-	    	webDriver.manage().window().maximize();
+	    	_webDriver.manage().window().maximize();
 	    }
 		
 	    public void hoverMouseOverWebElement(By element)
@@ -90,31 +93,98 @@ public class UiGenericUtils
 	    
 	    public Set<String> getAllWindowHandles()
 	    {
-	    	return webDriver.getWindowHandles();
+	    	return _webDriver.getWindowHandles();
 	    }
 	    
 	    public String getCurrentWindowHandle()
 	    {
-	    	return webDriver.getWindowHandle();
+	    	return _webDriver.getWindowHandle();
 	    }
 	    
 	    public void backToPreviousWindow()
 	    {
-	         webDriver.navigate().back();
+	         _webDriver.navigate().back();
 	    }
 	    
 	    public void clickOnForwardWindow()
 	    {
-	    	   webDriver.navigate().forward();
+	    	_webDriver.navigate().forward();
 	    }
 	    
 	    public void quitWebDriver()
 	    {
-	        webDriver.quit();
+	        _webDriver.quit();
 	    }
 
 	    public void closeWindow()
 	    {
-	        webDriver.close();
+	        _webDriver.close();
+	    }
+	    
+	    Boolean isElementDisplayed(By by) throws NoSuchElementException
+	    {
+	        WebElement element = getElementBy(by);
+	        return element.isDisplayed();
+	    }
+	    
+	    String getText(By by) 
+	    {
+	        WebElement element = getElementBy(by);
+	        return element.getText();
+	    }
+	    
+	    List<WebElement> getElementsBy(By by) 
+	    {    
+	        return _wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(by)); 
+	    }
+	    
+	    boolean noSuchElement(By by)
+	    {
+	        return _webDriver.findElements(by).size() == 0;
+	    }
+
+	    WebDriver switchToWindow(String windowHandle)
+	    {
+	       return _webDriver.switchTo().window(windowHandle);
+	    }
+	    
+	    WebDriver switchToWindow()
+	    {
+	        return switchToWindow(_webDriver.getWindowHandle());
+	    }
+
+	    WebDriver switchToWindowBasedOnPageTitle(String expectedPageTitle)
+	    {
+	    	Set<String> windowsHandles = _webDriver.getWindowHandles();
+
+			for(String windowsHandle:windowsHandles)
+			{
+				String currentPageTitle = _webDriver.switchTo().window(windowsHandle).getTitle();				
+				if(currentPageTitle.equals(expectedPageTitle) )
+				{
+					return _webDriver;		
+				} 
+			}
+			return null;
+	    }	 
+	    
+	    void hoverOnElement(By element)
+	    {
+	        WebDriver driver = getWebDriver();
+	        WebElement webEl = getElementBy(element);
+	        Actions action = new Actions(driver);
+	        action.moveToElement(webEl).perform();
+	    }
+	    
+	    void scrollToBottomOfPage()
+	    {
+	        JavascriptExecutor jsx = (JavascriptExecutor) _webDriver;
+	        jsx.executeScript("window.scrollTo(0, document.body.scrollHeight)");
+	    }
+
+	    void scrollElement(By by)
+	    {
+	        JavascriptExecutor jse = (JavascriptExecutor) _webDriver;
+	        jse.executeScript("arguments[0].scrollIntoView()", _webDriver.findElement(by));
 	    }
 }
